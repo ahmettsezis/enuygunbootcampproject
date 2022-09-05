@@ -1,0 +1,75 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: $NAMECLAIM
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $NEWNAME
+  labels:
+    app: $NEWNAME
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $NEWNAME
+  template:
+    metadata:
+      labels:
+        app: $NEWNAME
+    spec:
+      containers:
+        - image: wordpress
+          name: $NEWNAME
+          env:
+          - name: WORDPRESS_DB_HOST
+            value: mysql:3306
+          - name: WORDPRESS_DB_USER
+            value: root
+          - name: WORDPRESS_DB_NAME
+            value: mysql
+          - name: WORDPRESS_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: password
+          ports:
+            - containerPort: 80
+              name: $NEWNAME
+          volumeMounts:
+            - name: $NAMEPERSISTENT
+              mountPath: /var/www/html
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: $NAMEPERSISTENT
+          persistentVolumeClaim:
+            claimName: $NAMECLAIM
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: $NEWNAME
+  name: $NEWNAME
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: $NEWNAME
+  
