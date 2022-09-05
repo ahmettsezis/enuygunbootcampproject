@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wordpress
+  name: name
   labels:
-    app: wordpress
+    app: name
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: wordpress
+      app: name
   template:
     metadata:
       labels:
-        app: wordpress
+        app: name
     spec:
       containers:
         - image: wordpress
-          name: wordpress
+          name: name
           env:
           - name: WORDPRESS_DB_HOST
             value: mysql:3306
@@ -31,9 +31,9 @@ spec:
                 key: password
           ports:
             - containerPort: 80
-              name: wordpress
+              name: name
           volumeMounts:
-            - name: wordpress-persistent-storage
+            - name: name-persistent-storage
               mountPath: /var/www/html
           resources:
             requests:
@@ -43,6 +43,6 @@ spec:
               memory: "512Mi"
               cpu: "500m"
       volumes:
-        - name: wordpress-persistent-storage
+        - name: name-persistent-storage
           persistentVolumeClaim:
             claimName: name-volumeclaim
