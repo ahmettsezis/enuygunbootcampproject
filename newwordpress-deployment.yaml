@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: $(params.NEWCLAIM)
+  name: $(params.NEWCLAIM) + "asd"
 spec:
   accessModes:
     - ReadWriteOnce
