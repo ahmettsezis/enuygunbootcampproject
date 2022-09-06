@@ -1,0 +1,130 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                sh 'rm -rf enuygunbootcampproject'
+                sh 'git clone https://github.com/ahmettsezis/enuygunbootcampproject.git'
+                echo "${params.NEWCLAIM}"
+                sh 'pwd'
+            }
+        }
+        stage('Manipulate WP-VolumeClaim Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newwordpress-volumeclaim.yaml"
+                config.metadata.name = params.NEWCLAIM + "-volumeclaim"
+                dir('enuygunbootcampproject') {
+                sh 'rm newwordpress-volumeclaim.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newwordpress-volumeclaim.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newwordpress-volumeclaim.yaml'
+            }   
+        }
+        stage('Manipulate WP-Deployment Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newwordpress-deployment.yaml"
+                config.metadata.name = params.NEWCLAIM
+                config.metadata.labels.app = params.NEWCLAIM
+                config.spec.selector.matchLabels.app = params.NEWCLAIM
+                config.spec.template.metadata.labels.app = params.NEWCLAIM
+                config.spec.template.spec.containers[0].name = params.NEWCLAIM
+                config.spec.template.spec.containers[0].ports[0].name = params.NEWCLAIM
+                config.spec.template.spec.containers[0].volumeMounts[0].name = params.NEWCLAIM + "-persistent-storage"
+                config.spec.template.spec.volumes[0].name = params.NEWCLAIM + "-persistent-storage"
+                config.spec.template.spec.volumes[0].persistentVolumeClaim.claimName = params.NEWCLAIM + "-volumeclaim"
+                dir('enuygunbootcampproject') {
+                sh 'rm newwordpress-deployment.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newwordpress-deployment.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newwordpress-deployment.yaml'
+            }
+        }
+        stage('Manipulate WP-Service Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newwordpress-service.yaml"
+                config.metadata.labels.app = params.NEWCLAIM
+                config.metadata.name = params.NEWCLAIM
+                config.spec.selector.app = params.NEWCLAIM
+                dir('enuygunbootcampproject') {
+                sh 'rm newwordpress-service.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newwordpress-service.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newwordpress-service.yaml'   } 
+         }
+        stage('Manipulate MYSQL-Deployment Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newmysql-deployment.yaml"
+                config.metadata.labels.app = params.NEWCLAIM + "-mysql"
+                config.metadata.name = params.NEWCLAIM + "-mysql"
+                sh 'echo 0'
+                config.spec.selector.matchLabels.app = params.NEWCLAIM + "-mysql"
+                sh 'echo 1'
+                config.spec.template.metadata.labels.app = params.NEWCLAIM + "-mysql"
+                sh 'echo 2'
+                config.spec.template.spec.containers[0].name = params.NEWCLAIM + "-mysql"
+                sh 'echo 3'
+                config.spec.template.spec.containers[0].ports[0].name = params.NEWCLAIM + "-mysql"
+                sh 'echo 3'
+                config.spec.template.spec.containers[0].volumeMounts[0].name = params.NEWCLAIM + "-mysql-persistent-storage"
+                sh 'echo 4'
+                config.spec.template.spec.volumes[0].name = params.NEWCLAIM + "-mysql-persistent-storage"
+                sh 'echo 5'
+                config.spec.template.spec.volumes[0].persistentVolumeClaim.claimName = params.NEWCLAIM + "-mysql-volumeclaim"
+                sh 'echo 6'
+                dir('enuygunbootcampproject') {
+                sh 'rm newmysql-deployment.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newmysql-deployment.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newmysql-deployment.yaml'   } 
+        }
+        stage('Manipulate MYSQL-Service Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newmysql-service.yaml"
+                config.metadata.labels.app = params.NEWCLAIM + "-mysql"
+                config.metadata.name = params.NEWCLAIM + "-mysql"
+                config.spec.selector.app = params.NEWCLAIM + "-mysql"
+                dir('enuygunbootcampproject') {
+                sh 'rm newmysql-service.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newmysql-service.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newmysql-service.yaml'   } 
+        } 
+        stage('Manipulate MYSQL-VolumeClaim Yaml') {
+            steps {
+                script {
+                def config = readYaml file: "enuygunbootcampproject/newmysql-volumeclaim.yaml"
+                config.metadata.name = params.NEWCLAIM + "-mysql-volumeclaim"
+                dir('enuygunbootcampproject') {
+                sh 'rm newmysql-volumeclaim.yaml'
+                }
+                writeYaml file: "enuygunbootcampproject/newmysql-volumeclaim.yaml", data: config
+                }
+                sh 'cat enuygunbootcampproject/newmysql-volumeclaim.yaml'   } 
+        }  
+        stage('Kubectl Apply') {
+            steps {
+                dir('enuygunbootcampproject') {
+                sh 'kubectl apply -f newmysql-volumeclaim.yaml'
+                sh 'kubectl apply -f newmysql-deployment.yaml'
+                sh 'kubectl apply -f newmysql-service.yaml'
+                
+                sh 'kubectl apply -f newwordpress-volumeclaim.yaml'
+                sh 'kubectl apply -f newwordpress-deployment.yaml'
+                sh 'kubectl apply -f newwordpress-service.yaml'
+                }
+            }
+        } 
+    }
+
+}
