@@ -3,12 +3,11 @@
 //Project ID Variable
 variable "project_id" {
   type = string
-  default = "gproject-360616"
+  default = "bootcampproject-361712"
 }
 
 //Region Variable
 variable "region" {
   type = string
-  description = "Region Name"
   default = "europe-west1"
 }
